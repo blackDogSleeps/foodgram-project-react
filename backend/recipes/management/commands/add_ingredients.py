@@ -1,8 +1,10 @@
+import json
+import os
+
 from django.core.management.base import BaseCommand, CommandError
+
 from recipes.models import Ingredient
 
-import os
-import json
 
 class Command(BaseCommand):
     help = 'Добавляет ингридиенты из папки "data" в базу данных'
@@ -16,4 +18,3 @@ class Command(BaseCommand):
                              measurement_unit=i.get('measurement_unit'))
             if not Ingredient.objects.filter(name=obj.name).exists():
                 obj.save()
-

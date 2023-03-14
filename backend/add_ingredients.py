@@ -1,7 +1,7 @@
-from recipes.models import Ingredient
-
-import os
 import json
+import os
+
+from recipes.models import Ingredient
 
 os.chdir('../data')
 ingredients = json.load(open('ingredients.json', encoding='UTF-8'))

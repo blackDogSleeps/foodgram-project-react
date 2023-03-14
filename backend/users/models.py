@@ -32,3 +32,10 @@ class User(AbstractUser):
     password = models.CharField(
         verbose_name='Пароль',
         max_length=150)
+    
+    role = models.CharField(
+        verbose_name='Роль',
+        max_length=50,
+        choices=ROLES,
+        default=USER
+    )
