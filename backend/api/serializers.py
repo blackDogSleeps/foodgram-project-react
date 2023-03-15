@@ -39,7 +39,7 @@ class Base64ImageField(serializers.ImageField):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+            data = ContentFile(base64.b64decode(imgstr), name='image.' + ext)
         
         return super().to_internal_value(data)
 
@@ -61,9 +61,33 @@ class TagSerializer(serializers.ModelSerializer):
                   'slug']
 
 
+class IngredientsField(serializers.Field):
+    def to_internal_value(self, data):
+        return data
+
+    def to_representation(self, data):
+        keys = ['id', 'amount']
+        result = []
+        query = IngredientRecipe.objects.filter(
+            recipe_id=data.instance.id).values()
+
+        for item in query:
+            new_item = {}
+            for key, value in item.items():
+                if key in keys:
+                    new_item[key] = value
+                elif key == 'ingredient_id':
+                    ing_obj = Ingredient.objects.get(id=value)
+                    new_item['name'] = ing_obj.name
+                    new_item['measurement_unit'] = ing_obj.measurement_unit
+            result.append(new_item)
+        return result
+
+
 class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = AuthorField()
+    ingredients = IngredientsField()
 
     class Meta:
         model = Recipe
@@ -76,7 +100,6 @@ class TagField(serializers.Field):
         return data
 
     def to_representation(self, value):
-        logging.info(value.values())
         return value.values()
 
 
@@ -84,28 +107,26 @@ class RecipePostSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=True, allow_null=False)
     tags = TagField()
     author = AuthorField(required=False)
+    ingredients = IngredientsField()
 
     class Meta:
         model = Recipe
         fields = '__all__'
 
-    # def create(self, validated_data):
-    # #     ingredients = self._kwargs.get('data').get('ingredients')
-        # logging.info(validated_data)
-    #     tags = validated_data.pop('tags')
-    #     validated_data.update({'author': author})
-    #     new_recipe = Recipe.objects.create(**validated_data)
-    #     new_recipe.tags.set(tags)
-    # # logging.info(new_recipe.__dict__)
-    #     for values in ingredients:
-    #     # logging.info(values)
-    #         ingredient_obj = IngredientRecipe(
-    #             recipe=new_recipe,
-    #             ingredient=Ingredient.objects.get(id=values.get('id')),
-    #             amount=values.get('amount'))
-    #         ingredient_obj.save()
-    #     new_recipe.save()
-    #     serializer.save(author=self.request.user)
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        new_recipe = Recipe.objects.create(**validated_data)
+        new_recipe.tags.set(tags)
+
+        for values in ingredients:
+            ingredient_obj = IngredientRecipe(
+                recipe=new_recipe,
+                ingredient=Ingredient.objects.get(id=values.get('id')),
+                amount=values.get('amount'))
+            ingredient_obj.save()
+        new_recipe.save()
+        return new_recipe
 
 
 

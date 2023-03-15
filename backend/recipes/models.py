@@ -12,16 +12,12 @@ class Ingredient(models.Model):
         return self.name
 
 
-# class IngredientRecipe(models.Model):
-#     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
-#     ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
-
-
 class IngredientRecipe(models.Model):
     recipe = models.ForeignKey('Recipe',
-                               related_name='ingredient',
+                               related_name='ingredients',
                                on_delete=models.CASCADE,
-                               default=None)
+                               blank=True,
+                               null=True)
     ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
     amount = models.IntegerField()
     
