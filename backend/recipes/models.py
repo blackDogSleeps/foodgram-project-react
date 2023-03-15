@@ -7,20 +7,24 @@ User = get_user_model()
 class Ingredient(models.Model):
     name = models.CharField(max_length=200, unique=True)
     measurement_unit = models.CharField(max_length=200)
-    recipe = models.ManyToManyField(
-        'Recipe',
-        through='IngredientRecipe',
-        related_name='ingredients')
 
     def __str__(self):
         return self.name
 
 
-class IngredientRecipe(models.Model):
-    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
-    ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
-    amount = models.IntegerField(default=0)
+# class IngredientRecipe(models.Model):
+#     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
+#     ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
 
+
+class IngredientRecipe(models.Model):
+    recipe = models.ForeignKey('Recipe',
+                               related_name='ingredient',
+                               on_delete=models.CASCADE,
+                               default=None)
+    ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
+    amount = models.IntegerField()
+    
 
 class Recipe(models.Model):
     author = models.ForeignKey(User,
