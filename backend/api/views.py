@@ -1,24 +1,71 @@
 from django.shortcuts import get_object_or_404
+from django.http import FileResponse
+
 from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.mixins import (DestroyModelMixin, ListModelMixin,
                                    CreateModelMixin, RetrieveModelMixin)
-from rest_framework.decorators import action
+from rest_framework.views import APIView
 
-from bookmarks.models import BookMark
+from bookmarks.models import BookMark, ShoppingCart
 from recipes.models import Ingredient, Recipe, Tag
 from subscription.models import Follow
 from users.models import User
 from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
-from rest_framework.permissions import IsAuthenticated, AllowAny
 
-
+from .make_pdf import make_pdf
 from .exceptions import SelfSubscribe, SameSubscribe
 from .serializers import (IngredientGetSerializer, RecipeGetSerializer,
                           RecipePostSerializer, TagSerializer,
                           UserGetSerializer, UserPostSerializer,
                           FollowGetSerializer, FollowSerializer,
-                          BookMarkSerializer, logging)
+                          BookMarkSerializer, ShoppingCartSerializer,
+                          logging)
+
+
+class DownloadShoppingCartView(APIView):
+    def get(self, request):
+        logging.info(self)
+        logging.info(request.user)
+        result = {}
+        cart = request.user.shopping.all()
+        for position in cart:
+            for item in position.recipe.ingredients.all():
+                if item.ingredient.name in result:
+                    value = result.get(item.ingredient.name)
+                    value[-1] += item.amount
+                    result.update({ item.ingredient.name, value })
+                else:
+                    result[item.ingredient.name] = [
+                        item.ingredient.measurement_unit,
+                        item.amount]
+        
+        return FileResponse(make_pdf(result),
+                            as_attachment=True,
+                            filename='shopping-cart.pdf')
+
+
+class ShoppingCartViewSet(CreateModelMixin,
+                      DestroyModelMixin,
+                      viewsets.GenericViewSet):
+    queryset = ShoppingCart.objects.all()
+    serializer_class = ShoppingCartSerializer
+
+    def perform_create(self, serializer):
+        a_user = self.request.user
+        recipe_obj = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
+        if a_user.shopping.filter(recipe=recipe_obj).exists():
+            raise SameSubscribe('Этот рецепт уже в корзине')
+        serializer.save(user=a_user, recipe=recipe_obj)
+
+    def destroy(self, request, *args, **kwargs):
+        subscription = get_object_or_404(
+            request.user.shopping,
+            recipe_id=self.kwargs.get('pk'))
+        subscription.delete()
+        return Response(
+            {"detail": f'Рецепт удален из корзины'},
+            status=status.HTTP_204_NO_CONTENT) 
 
 
 class BookMarkViewSet(CreateModelMixin,
@@ -52,7 +99,6 @@ class FollowListViewSet(viewsets.GenericViewSet, ListModelMixin):
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
-    permission_classes = [IsAuthorAdminOrReadOnly]
 
     def perform_create(self, serializer):
         a_user = self.request.user

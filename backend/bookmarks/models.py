@@ -17,5 +17,21 @@ class BookMark(models.Model):
         on_delete=models.CASCADE)
 
     def __str__(self):
-    	return (f'Пользователь: {self.user}'
+    	return (f'Пользователь: {self.user} '
+                f'Рецепт: {self.recipe}')
+
+
+class ShoppingCart(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        related_name='in_cart',
+        on_delete=models.CASCADE)
+    
+    user = models.ForeignKey(
+        User,
+        related_name='shopping',
+        on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return (f'Пользователь: {self.user} '
                 f'Рецепт: {self.recipe}')

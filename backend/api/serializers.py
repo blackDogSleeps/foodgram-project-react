@@ -5,7 +5,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from bookmarks.models import BookMark
+from bookmarks.models import BookMark, ShoppingCart
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from subscription.models import Follow
 from users.models import User
@@ -59,6 +59,11 @@ class BookMarkSerializer(serializers.ModelSerializer):
             'cooking_time': data.recipe.cooking_time }
         return self.fields
 
+
+class ShoppingCartSerializer(BookMarkSerializer):
+    class Meta:
+        model = ShoppingCart
+        exclude = ['recipe', 'user', 'id']
 
 
 class FollowGetSerializer(serializers.ModelSerializer):

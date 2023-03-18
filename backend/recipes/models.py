@@ -21,6 +21,10 @@ class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
     amount = models.IntegerField()
 
+    def __str__(self):
+        return (self.ingredient.name,
+                self.amount)
+
 
 class Recipe(models.Model):
     author = models.ForeignKey(User,
