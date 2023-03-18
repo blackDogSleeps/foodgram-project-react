@@ -5,7 +5,9 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from bookmarks.models import BookMark
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
+from subscription.models import Follow
 from users.models import User
 
 
@@ -44,6 +46,27 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+class BookMarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookMark
+        exclude = ['recipe', 'user', 'id']
+
+    def to_representation(self, data):
+        self.fields = {
+            'id': data.id,
+            'name': data.recipe.name,
+            'image': data.recipe.image.url,
+            'cooking_time': data.recipe.cooking_time }
+        return self.fields
+
+
+
+class FollowGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = '__all__'
+
+
 class IngredientGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
@@ -62,9 +85,6 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientsField(serializers.Field):
-    def to_internal_value(self, data):
-        return data
-
     def to_representation(self, data):
         keys = ['id', 'amount']
         result = []
@@ -92,6 +112,38 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Follow
+        exclude = ['user', 'author', 'id']
+
+    def to_representation(self, instance):
+        user = instance.user
+        author_fields = User.objects.get(id=instance.author_id).__dict__
+        recipes = Recipe.objects.filter(author_id=instance.author_id)
+        is_subscribed = user.follower.filter(
+            author=instance.author).exists()
+        result = {}
+        keys = ['email',
+                'id',
+                'username',
+                'first_name',
+                'last_name']
+
+        for key, value in author_fields.items():
+            if key in keys:
+                result[key] = value
+        
+        result.update({ 'is_subscribed': is_subscribed })
+        result.update({ 'recipes': recipes.values('id',
+                                                  'name',
+                                                  'image',
+                                                  'cooking_time') })
+        result.update({ 'recipes_count': recipes.count() })
+        return result
 
 
 class TagField(serializers.Field):

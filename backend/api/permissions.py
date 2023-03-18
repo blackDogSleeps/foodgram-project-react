@@ -12,8 +12,9 @@ class IsAuthorAdminOrReadOnly(permissions.BasePermission):
 
         if request.method in ['PATCH', 'DELETE']:
             return (obj.author == request.user
+                    or obj.user == request.user
                     or request.user.is_superuser
-                    or request.user.role =='admin')
+                    or request.user.role == 'admin')
 
         return request.method in permissions.SAFE_METHODS
 

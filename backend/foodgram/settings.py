@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
+    'subscription.apps.SubscriptionConfig',
+    'bookmarks.apps.BookmarksConfig',
     'django_filters'
 ]
 

@@ -20,7 +20,7 @@ class IngredientRecipe(models.Model):
                                null=True)
     ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
     amount = models.IntegerField()
-    
+
 
 class Recipe(models.Model):
     author = models.ForeignKey(User,
@@ -32,6 +32,9 @@ class Recipe(models.Model):
                             default=None)
     text = models.TextField(default=None)
     cooking_time = models.IntegerField(default=1)
+
+    def __str__(self):
+        return self.name
 
 
 class Tag(models.Model):
