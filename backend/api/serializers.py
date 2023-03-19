@@ -186,15 +186,23 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return new_recipe
 
 
-
 class UserGetSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['email',
                   'id', 
                   'username',
                   'first_name',
-                  'last_name']
+                  'last_name',
+                  'is_subscribed']
+
+    def get_is_subscribed(self, obj):
+        a_user = self.context.get('request').user
+        if a_user.username == '':
+            return False
+        return a_user.follower.filter(author=obj).exists()
 
 
 class UserPostSerializer(serializers.ModelSerializer):
@@ -206,6 +214,13 @@ class UserPostSerializer(serializers.ModelSerializer):
                   'first_name',
                   'last_name',
                   'password']
+    
+    def to_representation(self, data):
+        result = {}
+        for key, value in data.__dict__.items():
+            if key in self.fields.keys() and key != 'password':
+                result.update({ key: value })
+        return result
 
     def create(self, validated_data):
         user = User(email=validated_data['email'],
