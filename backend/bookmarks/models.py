@@ -8,7 +8,7 @@ User = get_user_model()
 class BookMark(models.Model):
     recipe = models.ForeignKey(
         Recipe,
-        related_name='favorite',
+        related_name='is_favorited',
         on_delete=models.CASCADE)
 
     user = models.ForeignKey(
@@ -24,7 +24,7 @@ class BookMark(models.Model):
 class ShoppingCart(models.Model):
     recipe = models.ForeignKey(
         Recipe,
-        related_name='in_cart',
+        related_name='is_in_shopping_cart',
         on_delete=models.CASCADE)
     
     user = models.ForeignKey(

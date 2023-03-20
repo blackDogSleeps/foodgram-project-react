@@ -113,10 +113,21 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = AuthorField()
     ingredients = IngredientsField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = '__all__'
+
+    def get_is_favorited(self, obj):
+        a_user = self.context.get('request').user
+        return obj.is_favorited.filter(user=a_user).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        a_user = self.context.get('request').user
+        return obj.is_in_shopping_cart.filter(user=a_user).exists()        
+
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -223,10 +234,11 @@ class UserPostSerializer(serializers.ModelSerializer):
         return result
 
     def create(self, validated_data):
-        user = User(email=validated_data['email'],
-                    username=validated_data['username'],
-                    first_name=validated_data['first_name'],
-                    last_name=validated_data['last_name'])
-        user.set_password(validated_data['password'])
+        user = User(email=validated_data.get('email'),
+                    username=validated_data.get('username'),
+                    first_name=validated_data.get('first_name'),
+                    last_name=validated_data.get('last_name'))
+        
+        user.set_password(validated_data.get('password'))
         user.save()
         return user

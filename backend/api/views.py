@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.mixins import (DestroyModelMixin, ListModelMixin,
@@ -13,6 +15,7 @@ from subscription.models import Follow
 from users.models import User
 from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
 
+from .filters import RecipeFilter
 from .make_pdf import make_pdf
 from .exceptions import SelfSubscribe, SameSubscribe
 from .serializers import (IngredientGetSerializer, RecipeGetSerializer,
@@ -127,13 +130,15 @@ class IngredientViewSet(viewsets.ModelViewSet):
 	queryset = Ingredient.objects.all()
 	serializer_class = IngredientGetSerializer
 	filter_backends = [filters.SearchFilter]
-	search_fields = ['^name']
+	search_fields = ['name']
 	permission_classes = [AdminOrReadOnly]
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
