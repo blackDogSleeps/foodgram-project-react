@@ -22,17 +22,20 @@ class AuthorField(serializers.Field):
     def to_internal_value(self, data):
         return data
 
-    def to_representation(self, value):
-        keys = ['email',
-                'id',
-                'username',
-                'first_name',
-                'last_name']
-        result = {}
+    def to_representation(self, obj):
+        a_user = self.context.get('request').user
+        logging.info(a_user.username)
+        subscribed = False
+        if a_user.username != '':
+            subscribed = a_user.follower.filter(author=obj).exists()
         
-        for item in value.__dict__:
-            if item in keys:
-                result.update({ item: value.__dict__.get(item) })
+        result = { 'email': obj.email,
+                   'id': obj.id,
+                   'username': obj.username,
+                   'first_name': obj.first_name,
+                   'last_name': obj.last_name,
+                   'is_subscribed': subscribed }
+        
         return result
 
 
@@ -122,11 +125,15 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         a_user = self.context.get('request').user
-        return obj.is_favorited.filter(user=a_user).exists()
+        if a_user.username != '':
+            return obj.is_favorited.filter(user=a_user).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
         a_user = self.context.get('request').user
-        return obj.is_in_shopping_cart.filter(user=a_user).exists()        
+        if a_user.username != '':
+            return obj.is_in_shopping_cart.filter(user=a_user).exists()
+        return False
 
 
 

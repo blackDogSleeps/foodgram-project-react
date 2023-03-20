@@ -14,7 +14,7 @@ from recipes.models import Ingredient, Recipe, Tag
 from subscription.models import Follow
 from users.models import User
 from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
-
+from .custom_pagination import PageLimitPagination
 from .filters import RecipeFilter
 from .make_pdf import make_pdf
 from .exceptions import SelfSubscribe, SameSubscribe
@@ -28,8 +28,6 @@ from .serializers import (IngredientGetSerializer, RecipeGetSerializer,
 
 class DownloadShoppingCartView(APIView):
     def get(self, request):
-        logging.info(self)
-        logging.info(request.user)
         result = {}
         cart = request.user.shopping.all()
         for position in cart:
@@ -130,7 +128,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 	queryset = Ingredient.objects.all()
 	serializer_class = IngredientGetSerializer
 	filter_backends = [filters.SearchFilter]
-	search_fields = ['name']
+	search_fields = ['^name']
 	permission_classes = [AdminOrReadOnly]
 
 
