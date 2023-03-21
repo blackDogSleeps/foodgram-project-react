@@ -35,7 +35,7 @@ class DownloadShoppingCartView(APIView):
                 if item.ingredient.name in result:
                     value = result.get(item.ingredient.name)
                     value[-1] += item.amount
-                    result.update({ item.ingredient.name, value })
+                    result.update({ item.ingredient.name: value })
                 else:
                     result[item.ingredient.name] = [
                         item.ingredient.measurement_unit,
