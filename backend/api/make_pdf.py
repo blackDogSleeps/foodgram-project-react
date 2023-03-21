@@ -13,12 +13,13 @@ def make_pdf(result):
     text_object = pdf_file.beginText()
     text_object.setTextOrigin(25*mm, 265*mm)
     text_object.setFont('Noto', 20)
+    text_object.setLeading(32)
     text_object.textLine('Список покупок')
-    text_object.textLine('')
     text_object.setFont('Noto', 14)
+    text_object.setLeading(23)
 
     for key, value in result.items():
-        text_object.textLine(f'{key} ({value[0]}) - {value[1]}')
+        text_object.textLine(f'\u2022 \u2006 {key.capitalize()} ({value[0]}) \u2014 {value[1]}')
 
     pdf_file.drawText(text_object)
     pdf_file.showPage()

@@ -1,5 +1,6 @@
 import logging
 
+import re
 import base64
 
 from django.core.files.base import ContentFile
@@ -55,10 +56,14 @@ class BookMarkSerializer(serializers.ModelSerializer):
         exclude = ['recipe', 'user', 'id']
 
     def to_representation(self, data):
+        uri = re.findall(
+            '.*api',
+            self.context.get('request').build_absolute_uri())[0]
+        
         self.fields = {
             'id': data.id,
             'name': data.recipe.name,
-            'image': data.recipe.image.url,
+            'image': uri + data.recipe.image.url,
             'cooking_time': data.recipe.cooking_time }
         return self.fields
 
@@ -93,6 +98,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientsField(serializers.Field):
+    def to_internal_value(self, data):
+        return data
+
     def to_representation(self, data):
         keys = ['id', 'amount']
         result = []
@@ -145,27 +153,34 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         user = instance.user
-        author_fields = User.objects.get(id=instance.author_id).__dict__
+        author = User.objects.get(id=instance.author_id)
         recipes = Recipe.objects.filter(author_id=instance.author_id)
+        recipes_count = recipes.count() 
+        recipes_limit = self.context.get('request').query_params.get('recipes_limit')
+        if recipes_limit is not None:
+            recipes = recipes[:int(recipes_limit)]
+
         is_subscribed = user.follower.filter(
             author=instance.author).exists()
-        result = {}
-        keys = ['email',
-                'id',
-                'username',
-                'first_name',
-                'last_name']
 
-        for key, value in author_fields.items():
-            if key in keys:
-                result[key] = value
+        uri = self.context.get('request').build_absolute_uri()
+        image_prefix = re.findall('.*api/', uri)[0]+'media/'
+        recipes_list = list(recipes.values('id', 'name', 'image', 'cooking_time'))
         
+        for item in recipes_list:
+            image_uri = image_prefix + item.get('image')
+            item.update({'image': image_uri})
+        
+        result = {}
+        result.update({ 'email': author.email,
+                        'id': author.id,
+                        'username': author.username,
+                        'first_name': author.first_name,
+                        'last_name': author.last_name })
+
         result.update({ 'is_subscribed': is_subscribed })
-        result.update({ 'recipes': recipes.values('id',
-                                                  'name',
-                                                  'image',
-                                                  'cooking_time') })
-        result.update({ 'recipes_count': recipes.count() })
+        result.update({ 'recipes': recipes_list })
+        result.update({ 'recipes_count': recipes_count })
         return result
 
 
@@ -179,10 +194,13 @@ class TagField(serializers.Field):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    image = Base64ImageField(required=True, allow_null=False)
+    image = Base64ImageField()
     tags = TagField()
     author = AuthorField(required=False)
     ingredients = IngredientsField()
+    name = serializers.CharField()
+    text = serializers.CharField()
+    cooking_time = serializers.IntegerField()
 
     class Meta:
         model = Recipe
