@@ -164,7 +164,7 @@ class FollowSerializer(serializers.ModelSerializer):
             author=instance.author).exists()
 
         uri = self.context.get('request').build_absolute_uri()
-        image_prefix = re.findall('.*api/', uri)[0]+'media/'
+        image_prefix = re.findall('.*api/', uri)[0] + 'media/'
         recipes_list = list(recipes.values('id', 'name', 'image', 'cooking_time'))
         
         for item in recipes_list:
@@ -252,10 +252,11 @@ class UserPostSerializer(serializers.ModelSerializer):
                   'password']
     
     def to_representation(self, data):
-        result = {}
-        for key, value in data.__dict__.items():
-            if key in self.fields.keys() and key != 'password':
-                result.update({ key: value })
+        result = { "email": data.email,
+                   "id": data.id,
+                   "username": data.username,
+                   "first_name": data.first_name,
+                   "last_name": data.last_name }
         return result
 
     def create(self, validated_data):
