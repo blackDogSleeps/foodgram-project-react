@@ -1,7 +1,6 @@
-import logging
-
-import re
 import base64
+import logging
+import re
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
@@ -11,12 +10,10 @@ from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from subscription.models import Follow
 from users.models import User
 
-
 logging.basicConfig(
     filename='the_log.log',
     level=logging.INFO,
-    filemode='w'
-	)
+    filemode='w')
 
 
 class AuthorField(serializers.Field):
@@ -29,14 +26,14 @@ class AuthorField(serializers.Field):
         subscribed = False
         if a_user.username != '':
             subscribed = a_user.follower.filter(author=obj).exists()
-        
-        result = { 'email': obj.email,
-                   'id': obj.id,
-                   'username': obj.username,
-                   'first_name': obj.first_name,
-                   'last_name': obj.last_name,
-                   'is_subscribed': subscribed }
-        
+
+        result = {'email': obj.email,
+                  'id': obj.id,
+                  'username': obj.username,
+                  'first_name': obj.first_name,
+                  'last_name': obj.last_name,
+                  'is_subscribed': subscribed}
+
         return result
 
 
@@ -46,7 +43,7 @@ class Base64ImageField(serializers.ImageField):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='image.' + ext)
-        
+
         return super().to_internal_value(data)
 
 
@@ -59,12 +56,12 @@ class BookMarkSerializer(serializers.ModelSerializer):
         uri = re.findall(
             '.*api',
             self.context.get('request').build_absolute_uri())[0]
-        
+
         self.fields = {
             'id': data.id,
             'name': data.recipe.name,
             'image': uri + data.recipe.image.url,
-            'cooking_time': data.recipe.cooking_time }
+            'cooking_time': data.recipe.cooking_time}
         return self.fields
 
 
@@ -144,9 +141,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         return False
 
 
-
 class FollowSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = Follow
         exclude = ['user', 'author', 'id']
@@ -155,8 +151,9 @@ class FollowSerializer(serializers.ModelSerializer):
         user = instance.user
         author = User.objects.get(id=instance.author_id)
         recipes = Recipe.objects.filter(author_id=instance.author_id)
-        recipes_count = recipes.count() 
-        recipes_limit = self.context.get('request').query_params.get('recipes_limit')
+        recipes_count = recipes.count()
+        recipes_limit = self.context.get(
+            'request').query_params.get('recipes_limit')
         if recipes_limit is not None:
             recipes = recipes[:int(recipes_limit)]
 
@@ -165,22 +162,23 @@ class FollowSerializer(serializers.ModelSerializer):
 
         uri = self.context.get('request').build_absolute_uri()
         image_prefix = re.findall('.*api/', uri)[0] + 'media/'
-        recipes_list = list(recipes.values('id', 'name', 'image', 'cooking_time'))
-        
+        recipes_list = list(recipes.values(
+            'id', 'name', 'image', 'cooking_time'))
+
         for item in recipes_list:
             image_uri = image_prefix + item.get('image')
             item.update({'image': image_uri})
-        
-        result = {}
-        result.update({ 'email': author.email,
-                        'id': author.id,
-                        'username': author.username,
-                        'first_name': author.first_name,
-                        'last_name': author.last_name })
 
-        result.update({ 'is_subscribed': is_subscribed })
-        result.update({ 'recipes': recipes_list })
-        result.update({ 'recipes_count': recipes_count })
+        result = {}
+        result.update({'email': author.email,
+                       'id': author.id,
+                       'username': author.username,
+                       'first_name': author.first_name,
+                       'last_name': author.last_name})
+
+        result.update({'is_subscribed': is_subscribed})
+        result.update({'recipes': recipes_list})
+        result.update({'recipes_count': recipes_count})
         return result
 
 
@@ -228,7 +226,7 @@ class UserGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email',
-                  'id', 
+                  'id',
                   'username',
                   'first_name',
                   'last_name',
@@ -245,18 +243,18 @@ class UserPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email',
-                  'id', 
+                  'id',
                   'username',
                   'first_name',
                   'last_name',
                   'password']
-    
+
     def to_representation(self, data):
-        result = { "email": data.email,
-                   "id": data.id,
-                   "username": data.username,
-                   "first_name": data.first_name,
-                   "last_name": data.last_name }
+        result = {'email': data.email,
+                  'id': data.id,
+                  'username': data.username,
+                  'first_name': data.first_name,
+                  'last_name': data.last_name}
         return result
 
     def create(self, validated_data):
@@ -264,7 +262,7 @@ class UserPostSerializer(serializers.ModelSerializer):
                     username=validated_data.get('username'),
                     first_name=validated_data.get('first_name'),
                     last_name=validated_data.get('last_name'))
-        
+
         user.set_password(validated_data.get('password'))
         user.save()
         return user

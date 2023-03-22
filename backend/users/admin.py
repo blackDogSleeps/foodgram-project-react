@@ -1,9 +1,10 @@
 from django.contrib import admin
 
-from .models import User
+from bookmarks.models import BookMark, ShoppingCart
 from recipes.models import Ingredient, Recipe, Tag
 from subscription.models import Follow
-from bookmarks.models import BookMark, ShoppingCart
+
+from .models import User
 
 admin.site.register(User)
 admin.site.register(Tag)

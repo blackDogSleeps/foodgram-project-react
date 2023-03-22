@@ -1,7 +1,7 @@
 import json
 import os
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from recipes.models import Ingredient, Tag
 
@@ -11,9 +11,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         os.chdir('../data')
-        ingredients_file =  open('ingredients.json', encoding='UTF-8')
+        ingredients_file = open('ingredients.json', encoding='UTF-8')
         tags_file = open('tags.json', encoding='UTF-8')
-        
+
         ingredients = json.load(ingredients_file)
         tags = json.load(tags_file)
 
@@ -34,6 +34,3 @@ class Command(BaseCommand):
             if not Tag.objects.filter(name=obj.name).exists():
                 print(obj)
                 obj.save()
-
-        
-

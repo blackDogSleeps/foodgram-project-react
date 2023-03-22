@@ -8,4 +8,4 @@ class SelfSubscribe(APIException):
 
 
 class SameSubscribe(SelfSubscribe):
-	default_detail = f'Вы уже подписаны на этого автора'
+    default_detail = 'Вы уже подписаны на этого автора'
