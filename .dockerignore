@@ -1,2 +1,6 @@
 /backend/venv
 /backend/*.log
+/backend/switch_env.py
+/docs
+/frontend
+/infra
