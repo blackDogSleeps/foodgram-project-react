@@ -22,8 +22,8 @@ class IngredientRecipe(models.Model):
     amount = models.IntegerField()
 
     def __str__(self):
-        return (self.ingredient.name,
-                self.amount)
+        return (f'{self.ingredient.name}, '
+                f'{self.amount}')
 
 
 class Recipe(models.Model):
