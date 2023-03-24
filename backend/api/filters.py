@@ -8,8 +8,8 @@ def return_bools(user_fav, value, queryset):
 
 
 class RecipeFilter(djfilters.FilterSet):
-    author = djfilters.CharFilter(
-        field_name='author__username',
+    author = djfilters.NumberFilter(
+        field_name='author__id',
         lookup_expr='contains')
 
     tags = djfilters.CharFilter(

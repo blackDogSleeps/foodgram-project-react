@@ -21,18 +21,18 @@ env_list = current_env.read().split('\n')
 current_env.close()
 postgres = len(re.findall('postgres', env_list[1]))
 os.remove('.env')
-os.remove('../../infra/.env')
+os.remove('../../infra_back/.env')
 new_env = open('.env', 'w', encoding='UTF-8')
-new_env_two = open('../../infra/.env', 'w', encoding='UTF-8')
+new_env_two = open('../../infra_back/.env', 'w', encoding='UTF-8')
 
 if postgres == 1:
     new_env.write(LOCAL_VENV)
     new_env_two.write(LOCAL_VENV)
     print(LOCAL_VENV)
 else:
-	new_env.write(DOCKER_ENV)
-	new_env_two.write(DOCKER_ENV)
-	print(DOCKER_ENV)
+    new_env.write(DOCKER_ENV)
+    new_env_two.write(DOCKER_ENV)
+    print(DOCKER_ENV)
 
 new_env.close()
 new_env_two.close()

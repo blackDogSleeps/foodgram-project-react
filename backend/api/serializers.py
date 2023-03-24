@@ -161,7 +161,7 @@ class FollowSerializer(serializers.ModelSerializer):
             author=instance.author).exists()
 
         uri = self.context.get('request').build_absolute_uri()
-        image_prefix = re.findall('.*api/', uri)[0] + 'media/'
+        image_prefix = re.findall('.*api/', uri)[0].rstrip('api/') + '/media/'
         recipes_list = list(recipes.values(
             'id', 'name', 'image', 'cooking_time'))
 

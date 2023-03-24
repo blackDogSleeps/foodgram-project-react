@@ -126,6 +126,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['^name']
     permission_classes = [AdminOrReadOnly]
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -147,3 +148,4 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [AdminOrReadOnly]
+    pagination_class = None
