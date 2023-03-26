@@ -13,7 +13,7 @@ services:
     image: blackdogsleeps/foodgram:latest
     build:
         context: ..
-        dockerfile: Dockerfile
+        dockerfile: back_dockerfile
     restart: always
     volumes:
       - static_value:/foodgram/backend/static/
@@ -27,7 +27,7 @@ services:
   frontend:
     build:
       context: ../frontend
-      dockerfile: Dockerfile
+      dockerfile: front_dockerfile
     volumes:
       - ../frontend/:/app/result_build/ 
     depends_on:

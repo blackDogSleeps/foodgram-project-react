@@ -1,20 +1,13 @@
 import base64
-import logging
 import re
 
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from bookmarks.models import BookMark, ShoppingCart
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from subscription.models import Follow
 from users.models import User
-
-logging.basicConfig(
-    filename='the_log.log',
-    level=logging.INFO,
-    filemode='w')
 
 
 class AuthorField(serializers.Field):
@@ -221,7 +214,7 @@ class RecipePostSerializer(RecipeGetSerializer):
 
     def update(self, instance, validated_data):
         if 'ingredients' in validated_data:
-            instance.ingredients.all().delete()   
+            instance.ingredients.all().delete()
             ingredients = validated_data.pop('ingredients')
 
             for values in ingredients:
@@ -231,16 +224,15 @@ class RecipePostSerializer(RecipeGetSerializer):
                         id=values.get('id')),
                     amount=values.get('amount'))
                 ingredient_obj.save()
-        
+
         if 'tags' in validated_data:
             instance.tags.set(validated_data.pop('tags'))
 
         for key, value in validated_data.items():
             setattr(instance, key, value)
-        
+
         instance.save()
         return instance
-
 
 
 class UserGetSerializer(serializers.ModelSerializer):

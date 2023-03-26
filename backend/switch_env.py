@@ -21,9 +21,9 @@ env_list = current_env.read().split('\n')
 current_env.close()
 postgres = len(re.findall('postgres', env_list[1]))
 os.remove('.env')
-os.remove('../../infra_back/.env')
+os.remove('../../infra/.env')
 new_env = open('.env', 'w', encoding='UTF-8')
-new_env_two = open('../../infra_back/.env', 'w', encoding='UTF-8')
+new_env_two = open('../../infra/.env', 'w', encoding='UTF-8')
 
 if postgres == 1:
     new_env.write(LOCAL_VENV)

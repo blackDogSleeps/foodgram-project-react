@@ -133,3 +133,7 @@ dmypy.json
 
 # Media
 backend/media/
+
+# Other stuff
+infra_front/
+api_logging.py
