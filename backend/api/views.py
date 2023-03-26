@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bookmarks.models import BookMark, ShoppingCart
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from subscription.models import Follow
 from users.models import User
 
@@ -19,7 +19,7 @@ from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
 from .serializers import (BookMarkSerializer, TagSerializer,
                           FollowSerializer, IngredientGetSerializer,
                           RecipeGetSerializer, RecipePostSerializer,
-                          ShoppingCartSerializer)
+                          ShoppingCartSerializer, logging)
 
 
 class DownloadShoppingCartView(APIView):

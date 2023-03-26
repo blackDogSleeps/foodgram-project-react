@@ -55,4 +55,4 @@ class Tag(models.Model):
 
 class TagRecipe(models.Model):
     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
-    tag = models.ForeignKey('Tag', on_delete=models.CASCADE)
+    tag = models.ForeignKey('Tag', on_delete=models.DO_NOTHING)

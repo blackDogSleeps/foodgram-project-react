@@ -3,6 +3,7 @@ import logging
 import re
 
 from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from bookmarks.models import BookMark, ShoppingCart
@@ -22,7 +23,6 @@ class AuthorField(serializers.Field):
 
     def to_representation(self, obj):
         a_user = self.context.get('request').user
-        logging.info(a_user.username)
         subscribed = False
         if a_user.username != '':
             subscribed = a_user.follower.filter(author=obj).exists()
@@ -191,7 +191,7 @@ class TagField(serializers.Field):
         return value.values()
 
 
-class RecipePostSerializer(serializers.ModelSerializer):
+class RecipePostSerializer(RecipeGetSerializer):
     image = Base64ImageField()
     tags = TagField()
     author = AuthorField(required=False)
@@ -218,6 +218,29 @@ class RecipePostSerializer(serializers.ModelSerializer):
             ingredient_obj.save()
         new_recipe.save()
         return new_recipe
+
+    def update(self, instance, validated_data):
+        if 'ingredients' in validated_data:
+            instance.ingredients.all().delete()   
+            ingredients = validated_data.pop('ingredients')
+
+            for values in ingredients:
+                ingredient_obj = IngredientRecipe(
+                    recipe=instance,
+                    ingredient=Ingredient.objects.get(
+                        id=values.get('id')),
+                    amount=values.get('amount'))
+                ingredient_obj.save()
+        
+        if 'tags' in validated_data:
+            instance.tags.set(validated_data.pop('tags'))
+
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        
+        instance.save()
+        return instance
+
 
 
 class UserGetSerializer(serializers.ModelSerializer):
