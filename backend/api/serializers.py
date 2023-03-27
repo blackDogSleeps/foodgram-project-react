@@ -267,7 +267,6 @@ class UserPostSerializer(serializers.ModelSerializer):
                 'username': data.username,
                 'first_name': data.first_name,
                 'last_name': data.last_name}
-        
 
     def create(self, validated_data):
         user = User(email=validated_data.get('email'),
