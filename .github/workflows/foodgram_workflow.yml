@@ -45,7 +45,7 @@ jobs:
       - name: Push backend to Docker Hub
         uses: docker/build-push-action@v4
         with:
-          context: ./infra/
+          context: .
           push: true
           tags: blackdogsleeps/foodgram:latest
 
