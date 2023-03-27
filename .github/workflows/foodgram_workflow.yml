@@ -52,7 +52,7 @@ jobs:
       - name: Push frontend to Docker Hub
         uses: docker/build-push-action@v4
         with:
-          context: ./frontend/front_dockerfile
+          context: ./frontend/
           push: true
           tags: blackdogsleeps/foodgram_front:latest
 
