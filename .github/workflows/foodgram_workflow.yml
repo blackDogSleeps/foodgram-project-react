@@ -1,4 +1,4 @@
-name: Yamdb workflow
+name: Foodgram workflow
 
 on: [push]
 
@@ -21,6 +21,7 @@ jobs:
 
       - name: Test with flake8
         run: |
+          cd backend
           python -m flake8
 
 
