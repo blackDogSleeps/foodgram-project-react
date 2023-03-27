@@ -1,3 +1,8 @@
+![BADGE](https://github.com/blackDogSleeps/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
+
+Адрес проекта: http://notadiary.ddns.net/
+
+
 # Foodgram
 Учебный проект для размещения и обмена кулинарными рецептами. Можно подписываться на публикации других пользователей, добавлять понравившиеся рецепты в список «Избранное», скачивать сводный список продуктов.
 
