@@ -28,7 +28,7 @@ services:
     image: blackdogsleeps/foodgram_front:latest
     build:
       context: ./frontend
-      dockerfile: front_dockerfile
+      dockerfile: Dockerfile
     volumes:
       - ./frontend/:/app/result_build/ 
     depends_on:
