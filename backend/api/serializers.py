@@ -20,14 +20,12 @@ class AuthorField(serializers.Field):
         if a_user.username != '':
             subscribed = a_user.follower.filter(author=obj).exists()
 
-        result = {'email': obj.email,
-                  'id': obj.id,
-                  'username': obj.username,
-                  'first_name': obj.first_name,
-                  'last_name': obj.last_name,
-                  'is_subscribed': subscribed}
-
-        return result
+        return {'email': obj.email,
+                'id': obj.id,
+                'username': obj.username,
+                'first_name': obj.first_name,
+                'last_name': obj.last_name,
+                'is_subscribed': subscribed}
 
 
 class Base64ImageField(serializers.ImageField):
@@ -177,8 +175,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
 class TagField(serializers.Field):
     def to_internal_value(self, data):
-        data = Tag.objects.filter(id__in=data)
-        return data
+        return Tag.objects.filter(id__in=data)
 
     def to_representation(self, value):
         return value.values()
@@ -265,12 +262,12 @@ class UserPostSerializer(serializers.ModelSerializer):
                   'password']
 
     def to_representation(self, data):
-        result = {'email': data.email,
-                  'id': data.id,
-                  'username': data.username,
-                  'first_name': data.first_name,
-                  'last_name': data.last_name}
-        return result
+        return {'email': data.email,
+                'id': data.id,
+                'username': data.username,
+                'first_name': data.first_name,
+                'last_name': data.last_name}
+        
 
     def create(self, validated_data):
         user = User(email=validated_data.get('email'),
