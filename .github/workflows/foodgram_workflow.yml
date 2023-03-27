@@ -45,16 +45,16 @@ jobs:
       - name: Push backend to Docker Hub
         uses: docker/build-push-action@v4
         with:
+          context: .
           push: true
           tags: blackdogsleeps/foodgram:latest
 
       - name: Push frontend to Docker Hub
         uses: docker/build-push-action@v4
         with:
+          context: ./frontend/front_dockerfile
           push: true
           tags: blackdogsleeps/foodgram_front:latest
-        
-
 
 
   deploy:
