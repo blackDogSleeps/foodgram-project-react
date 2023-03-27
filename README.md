@@ -23,7 +23,7 @@ bash add_tags_and_ingredients.sh
 
 ## Панель администратора
 ```
-http://localhost/admin
+http://$host/admin
 ```
 
 
