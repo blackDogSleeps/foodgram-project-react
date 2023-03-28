@@ -12,7 +12,7 @@ services:
   backend:
     image: blackdogsleeps/foodgram:latest
     build:
-        context: .
+        context: ..
         dockerfile: Dockerfile
     restart: always
     volumes:
@@ -27,7 +27,7 @@ services:
   frontend:
     image: blackdogsleeps/foodgram_front:latest
     build:
-      context: ./frontend
+      context: ../frontend
       dockerfile: Dockerfile
     volumes:
       - ./frontend/:/app/result_build/ 

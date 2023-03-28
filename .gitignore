@@ -137,3 +137,12 @@ backend/media/
 # Other stuff
 infra_front/
 api_logging.py
+infra/add_tags_and_ingredients.sh
+infra/django.sh
+infra/up.sh
+infra/down.sh
+infra/stop.sh
+infra/nginx.sh
+infra/postgre.sh
+backend/switch_env.py
+auto_deploy/
