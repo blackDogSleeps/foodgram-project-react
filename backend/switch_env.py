@@ -6,14 +6,16 @@ DOCKER_ENV = ('DB_ENGINE=django.db.backends.postgresql\n'
               'POSTGRES_USER=postgres\n'
               'POSTGRES_PASSWORD=%tghy65tg\n'
               'DB_HOST=db\n'
-              'DB_PORT=5432\n')
+              'DB_PORT=5432\n'
+              'SECRET_KEY=bWNrymFqYfJNBIrCrFXs9cApM0IqOULMwL/2vFq2zIY=\n')
 
 LOCAL_VENV = ('DB_ENGINE=django.db.backends.postgresql\n'
               'DB_NAME=foodgram\n'
               'POSTGRES_USER=foodgram_user\n'
               'POSTGRES_PASSWORD=%tghy65tg\n'
               'DB_HOST=localhost\n'
-              'DB_PORT=5432\n')
+              'DB_PORT=5432\n'
+              'SECRET_KEY=bWNrymFqYfJNBIrCrFXs9cApM0IqOULMwL/2vFq2zIY=\n')
 
 os.chdir('foodgram/')
 current_env = open('.env', encoding='UTF-8')

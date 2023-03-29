@@ -72,11 +72,10 @@ class BookMarkViewSet(CreateModelMixin,
     serializer_class = BookMarkSerializer
 
     def perform_create(self, serializer):
-        a_user = self.request.user
         recipe_obj = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
-        if a_user.likes.filter(recipe=recipe_obj).exists():
+        if self.request.user.likes.filter(recipe=recipe_obj).exists():
             raise SameSubscribe('Этот рецепт у вас уже есть')
-        serializer.save(user=a_user, recipe=recipe_obj)
+        serializer.save(user=self.request.user, recipe=recipe_obj)
 
     def destroy(self, request, *args, **kwargs):
         subscription = get_object_or_404(
