@@ -1,25 +1,24 @@
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from rest_framework import filters, status, viewsets
-from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
-                                   ListModelMixin)
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bookmarks.models import BookMark, ShoppingCart
 from recipes.models import Ingredient, Recipe, Tag
 from subscription.models import Follow
-from users.models import User
 
-from .exceptions import SameSubscribe, SelfSubscribe
+from .exceptions import SameSubscribe
 from .filters import RecipeFilter
 from .make_pdf import make_pdf
 from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
 from .serializers import (BookMarkSerializer, FollowSerializer,
                           IngredientGetSerializer, RecipeGetSerializer,
                           RecipePostSerializer, ShoppingCartSerializer,
-                          TagSerializer, logging)
+                          TagSerializer, UserGetSerializer, UserPostSerializer)
 
 
 class DownloadShoppingCartView(APIView):
@@ -48,6 +47,15 @@ class ShoppingCartViewSet(CreateModelMixin,
     queryset = ShoppingCart.objects.all()
     serializer_class = ShoppingCartSerializer
 
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self,
+            'favorites': BookMark.objects.filter(
+                user_id=self.request.user).values_list(
+                    'recipe_id', flat=True)}
+
     def perform_create(self, serializer):
         a_user = self.request.user
         recipe_obj = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
@@ -71,6 +79,14 @@ class BookMarkViewSet(CreateModelMixin,
     queryset = BookMark.objects.all()
     serializer_class = BookMarkSerializer
 
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self,
+            'favorites': BookMark.objects.filter(
+                user_id=self.request.user).values_list('recipe_id', flat=True)}
+
     def destroy(self, request, *args, **kwargs):
         subscription = get_object_or_404(
             request.user.likes,
@@ -91,11 +107,7 @@ class FollowViewSet(viewsets.ModelViewSet):
             'format': self.format_kwarg,
             'view': self,
             'subscriptions': Follow.objects.filter(
-                                 user_id=self.request.user).values_list(
-                                                                'author_id',
-                                                                flat=True)
-        }
-
+                user_id=self.request.user).values_list('author_id', flat=True)}
 
     def destroy(self, request, *args, **kwargs):
         subscription = get_object_or_404(
@@ -133,11 +145,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'request': self.request,
             'format': self.format_kwarg,
             'view': self,
+            'favorites': BookMark.objects.filter(
+                user_id=self.request.user).values_list('recipe_id', flat=True),
+
             'subscriptions': Follow.objects.filter(
-                                 user_id=self.request.user).values_list(
-                                                                'author_id',
-                                                                flat=True)
-        }
+                user_id=self.request.user).values_list('author_id', flat=True),
+
+            'shopping_cart': ShoppingCart.objects.filter(
+                user_id=self.request.user).values_list('recipe_id', flat=True)}
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -148,3 +163,19 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     permission_classes = [AdminOrReadOnly]
     pagination_class = None
+
+
+class CustomUserViewSet(UserViewSet):
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return UserGetSerializer
+        return UserPostSerializer
+
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self,
+            'subscriptions': Follow.objects.filter(
+                user_id=self.request.user).values_list('author_id', flat=True)}

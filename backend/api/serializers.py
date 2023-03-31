@@ -1,18 +1,7 @@
-import logging
-
-import logging
-
-logging.basicConfig(
-    filename='the_log.log',
-    level=logging.INFO,
-    filemode='w')
-
-
 import base64
 import re
 
 from django.core.files.base import ContentFile
-from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -33,35 +22,37 @@ class Base64ImageField(serializers.ImageField):
 
 
 class BookMarkSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    cooking_time = serializers.SerializerMethodField()
+
     class Meta:
         model = BookMark
-        exclude = ['recipe', 'user', 'id']
+        fields = ['id', 'name', 'image', 'cooking_time']
 
     def validate(self, attrs):
         recipe_obj = get_object_or_404(
             Recipe,
-            id=self.context.get('request').parser_context.get('kwargs').get('pk'))
-        
-        if self.context.get('request').user.likes.filter(recipe=recipe_obj).exists():
+            id=self.context.get(
+                'request').parser_context.get('kwargs').get('pk'))
+
+        if recipe_obj in self.context.get('favorites'):
             raise serializers.ValidationError('Этот рецепт у вас уже есть')
-        
+
         attrs.update({'user': self.context.get('request').user,
                       'recipe': recipe_obj})
         return attrs
 
+    def get_name(self, obj):
+        return obj.recipe.name
 
+    def get_image(self, obj):
+        uri = self.context.get('request').build_absolute_uri()
+        image_prefix = re.findall('.*api/', uri)[0].rstrip('api/') + '/media/'
+        return image_prefix + str(obj.recipe.image)
 
-    def to_representation(self, data):
-        uri = re.findall(
-            '.*api',
-            self.context.get('request').build_absolute_uri())[0]
-
-        self.fields = {
-            'id': data.id,
-            'name': data.recipe.name,
-            'image': uri + data.recipe.image.url,
-            'cooking_time': data.recipe.cooking_time}
-        return self.fields
+    def get_cooking_time(self, obj):
+        return obj.recipe.cooking_time
 
 
 class ShoppingCartSerializer(BookMarkSerializer):
@@ -97,17 +88,17 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = ['id', 'name', 'measurement_unit', 'amount']
 
-    def get_id(self, *args):
-        return args[0].ingredient.id
+    def get_id(self, obj):
+        return obj.ingredient.id
 
-    def get_name(self, *args):
-        return args[0].ingredient.name
+    def get_name(self, obj):
+        return obj.ingredient.name
 
-    def get_measurement_unit(self, *args):
-        return args[0].ingredient.measurement_unit
+    def get_measurement_unit(self, obj):
+        return obj.ingredient.measurement_unit
 
-    def get_amount(self, *args):
-        return args[0].amount
+    def get_amount(self, obj):
+        return obj.amount
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
@@ -123,16 +114,10 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_is_favorited(self, obj):
-        a_user = self.context.get('request').user
-        if a_user.username != '':
-            return obj.is_favorited.filter(user=a_user).exists()
-        return False
+        return obj.id in self.context.get('favorites')
 
     def get_is_in_shopping_cart(self, obj):
-        a_user = self.context.get('request').user
-        if a_user.username != '':
-            return obj.is_in_shopping_cart.filter(user=a_user).exists()
-        return False
+        return obj.id in self.context.get('shopping_cart')
 
     def get_author(self, obj):
         return UserGetSerializer(
@@ -150,8 +135,7 @@ class FollowRecipeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'cooking_time']
 
     def get_image(self, obj):
-        return self.context.get('prefix')+obj.get('image')
-
+        return self.context.get('prefix') + obj.get('image')
 
 
 class FollowGetSerializer(serializers.ModelSerializer):
@@ -192,24 +176,21 @@ class FollowGetSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         subscriptions = Follow.objects.filter(
-            user_id=self.context.get('request').user).values_list(
-                                                          'author_id',
-                                                          flat=True)
+            user_id=self.context.get(
+                'request').user).values_list('author_id', flat=True)
+
         return obj.author.id in subscriptions
 
     def get_recipes(self, obj):
         uri = self.context.get('request').build_absolute_uri()
         image_prefix = re.findall('.*api/', uri)[0].rstrip('api/') + '/media/'
         return FollowRecipeSerializer(
-           many=True,
-           instance=Recipe.objects.filter(author=obj.author).values(),
-           context={'prefix': image_prefix}).data
+            many=True,
+            instance=Recipe.objects.filter(author=obj.author).values(),
+            context={'prefix': image_prefix}).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author).count()
-
-
-
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -225,14 +206,16 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         a_user = self.context.get('request').user
         author = get_object_or_404(
-            User, 
-            id=self.context.get('request').parser_context.get('kwargs').get('pk'))
-        
+            User,
+            id=self.context.get(
+                'request').parser_context.get('kwargs').get('pk'))
+
         if author == a_user:
             raise serializers.ValidationError('Нельзя подписаться на себя')
 
         if author.id in self.context.get('subscriptions'):
-            raise serializers.ValidationError('Вы уже подписаны на этого автора')
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого автора')
 
         attrs.update({'user': a_user,
                       'author': author})
@@ -252,7 +235,6 @@ class RecipePostSerializer(RecipeGetSerializer):
     image = Base64ImageField()
     tags = TagField()
     author = serializers.CharField(required=False)
-    # ingredients = IngredientsField()
     ingredients = IngredientRecipeSerializer(many=True, read_only=True)
     name = serializers.CharField()
     text = serializers.CharField()
@@ -264,16 +246,16 @@ class RecipePostSerializer(RecipeGetSerializer):
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        ingredients = self.initial_data.get('ingredients')
         new_recipe = Recipe.objects.create(**validated_data)
         new_recipe.tags.set(tags)
 
-        for values in ingredients:
-            ingredient_obj = IngredientRecipe(
+        IngredientRecipe.objects.bulk_create([
+            IngredientRecipe(
                 recipe=new_recipe,
                 ingredient=Ingredient.objects.get(id=values.get('id')),
-                amount=values.get('amount'))
-            ingredient_obj.save()
+                amount=values.get('amount')) for values in ingredients])
+
         new_recipe.save()
         return new_recipe
 
@@ -313,10 +295,7 @@ class UserGetSerializer(serializers.ModelSerializer):
                   'is_subscribed']
 
     def get_is_subscribed(self, obj):
-        a_user = self.context.get('request').user
-        if a_user.username == '':
-            return False
-        return a_user.follower.filter(author=obj).exists()
+        return obj.id in self.context.get('subscriptions')
 
 
 class UserPostSerializer(serializers.ModelSerializer):
