@@ -19,7 +19,7 @@ from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
 from .serializers import (BookMarkSerializer, FollowSerializer,
                           IngredientGetSerializer, RecipeGetSerializer,
                           RecipePostSerializer, ShoppingCartSerializer,
-                          TagSerializer)
+                          TagSerializer, logging)
 
 
 class DownloadShoppingCartView(APIView):
@@ -71,12 +71,6 @@ class BookMarkViewSet(CreateModelMixin,
     queryset = BookMark.objects.all()
     serializer_class = BookMarkSerializer
 
-    def perform_create(self, serializer):
-        recipe_obj = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
-        if self.request.user.likes.filter(recipe=recipe_obj).exists():
-            raise SameSubscribe('Этот рецепт у вас уже есть')
-        serializer.save(user=self.request.user, recipe=recipe_obj)
-
     def destroy(self, request, *args, **kwargs):
         subscription = get_object_or_404(
             request.user.likes,
@@ -87,26 +81,21 @@ class BookMarkViewSet(CreateModelMixin,
             status=status.HTTP_204_NO_CONTENT)
 
 
-class FollowListViewSet(viewsets.GenericViewSet, ListModelMixin):
-    queryset = Follow.objects.all()
-    serializer_class = FollowSerializer
-
-
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
 
-    def perform_create(self, serializer):
-        a_user = self.request.user
-        an_author = get_object_or_404(User, id=self.kwargs.get('pk'))
-        if an_author == a_user:
-            raise SelfSubscribe
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self,
+            'subscriptions': Follow.objects.filter(
+                                 user_id=self.request.user).values_list(
+                                                                'author_id',
+                                                                flat=True)
+        }
 
-        if a_user.follower.filter(author=an_author).exists():
-            raise SameSubscribe
-
-        serializer.save(user=self.request.user,
-                        author=an_author)
 
     def destroy(self, request, *args, **kwargs):
         subscription = get_object_or_404(
@@ -138,6 +127,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return RecipeGetSerializer
         return RecipePostSerializer
+
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self,
+            'subscriptions': Follow.objects.filter(
+                                 user_id=self.request.user).values_list(
+                                                                'author_id',
+                                                                flat=True)
+        }
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
