@@ -3,3 +3,5 @@ python manage.py migrate
 python manage.py collectstatic
 # python manage.py add_tags_and_ingredients
 python manage.py loaddata fixtures.json
+
+# none
