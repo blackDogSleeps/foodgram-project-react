@@ -79,6 +79,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
     measurement_unit = serializers.SerializerMethodField()
     amount = serializers.SerializerMethodField()
@@ -86,6 +87,9 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ['id', 'name', 'measurement_unit', 'amount']
+
+    def get_id(self, obj):
+        return obj.ingredient.id
 
     def get_name(self, obj):
         return obj.ingredient.name
@@ -256,17 +260,15 @@ class RecipePostSerializer(RecipeGetSerializer):
         return new_recipe
 
     def update(self, instance, validated_data):
-        if 'ingredients' in validated_data:
+        if 'ingredients' in self.initial_data:
             instance.ingredients.all().delete()
-            ingredients = validated_data.pop('ingredients')
+            ingredients = self.initial_data.get('ingredients')
 
-            for values in ingredients:
-                ingredient_obj = IngredientRecipe(
+            IngredientRecipe.objects.bulk_create([
+                IngredientRecipe(
                     recipe=instance,
-                    ingredient=Ingredient.objects.get(
-                        id=values.get('id')),
-                    amount=values.get('amount'))
-                ingredient_obj.save()
+                    ingredient=Ingredient.objects.get(id=values.get('id')),
+                    amount=values.get('amount')) for values in ingredients])
 
         if 'tags' in validated_data:
             instance.tags.set(validated_data.pop('tags'))
@@ -291,7 +293,9 @@ class UserGetSerializer(serializers.ModelSerializer):
                   'is_subscribed']
 
     def get_is_subscribed(self, obj):
-        return obj.id in self.context.get('subscriptions')
+        if 'subscriptions' in self.context:
+            return obj.id in self.context.get('subscriptions')
+        return False
 
 
 class UserPostSerializer(serializers.ModelSerializer):

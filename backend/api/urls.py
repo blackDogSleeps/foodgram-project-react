@@ -6,7 +6,7 @@ from .views import (BookMarkViewSet, CustomUserViewSet,
                     RecipeViewSet, ShoppingCartViewSet, TagViewSet)
 
 router = DefaultRouter()
-router.register(r'users', CustomUserViewSet, basename='users')
+router.register(r'users', CustomUserViewSet)
 router.register(r'ingredients', IngredientViewSet, basename='ingredients')
 router.register(r'tags', TagViewSet, basename='tags')
 router.register(r'recipes', RecipeViewSet, basename='recipes')
@@ -43,7 +43,7 @@ urlpatterns = [
          name='subscriptions'),
 
     path('', include(router.urls)),
-    path('', include('djoser.urls.base')),
+    # path('', include('djoser.urls.base')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken'))
 ]

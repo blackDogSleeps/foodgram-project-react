@@ -173,9 +173,14 @@ class CustomUserViewSet(UserViewSet):
         return UserPostSerializer
 
     def get_serializer_context(self):
+        if self.request.user.is_anonymous:
+            subscriptions = []
+        else:
+            subscriptions = Follow.objects.filter(
+                user_id=self.request.user).values_list('author_id', flat=True)
+
         return {
             'request': self.request,
             'format': self.format_kwarg,
             'view': self,
-            'subscriptions': Follow.objects.filter(
-                user_id=self.request.user).values_list('author_id', flat=True)}
+            'subscriptions': subscriptions}
