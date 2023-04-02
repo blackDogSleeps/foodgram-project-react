@@ -114,10 +114,14 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_is_favorited(self, obj):
-        return obj.id in self.context.get('favorites')
+        if 'favorites' in self.context:
+            return obj.id in self.context.get('favorites')
+        return False
 
     def get_is_in_shopping_cart(self, obj):
-        return obj.id in self.context.get('shopping_cart')
+        if 'shopping_cart' in self.context:
+            return obj.id in self.context.get('shopping_cart')
+        return False
 
     def get_author(self, obj):
         return UserGetSerializer(

@@ -141,10 +141,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipePostSerializer
 
     def get_serializer_context(self):
-        return {
+        context = {
             'request': self.request,
             'format': self.format_kwarg,
-            'view': self,
+            'view': self}
+
+        if self.request.user.is_anonymous:
+            return context
+
+        context.update({
             'favorites': BookMark.objects.filter(
                 user_id=self.request.user).values_list('recipe_id', flat=True),
 
@@ -152,7 +157,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 user_id=self.request.user).values_list('author_id', flat=True),
 
             'shopping_cart': ShoppingCart.objects.filter(
-                user_id=self.request.user).values_list('recipe_id', flat=True)}
+                user_id=self.request.user).values_list(
+                    'recipe_id', flat=True)})
+
+        return context
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -173,14 +181,17 @@ class CustomUserViewSet(UserViewSet):
         return UserPostSerializer
 
     def get_serializer_context(self):
-        if self.request.user.is_anonymous:
-            subscriptions = []
-        else:
-            subscriptions = Follow.objects.filter(
-                user_id=self.request.user).values_list('author_id', flat=True)
-
-        return {
+        context = {
             'request': self.request,
             'format': self.format_kwarg,
-            'view': self,
-            'subscriptions': subscriptions}
+            'view': self}
+
+        if self.request.user.is_anonymous:
+            return context
+
+        context.update({
+            'subscriptions': Follow.objects.filter(
+                user_id=self.request.user).values_list(
+                    'author_id', flat=True)})
+
+        return context
