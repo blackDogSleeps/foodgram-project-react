@@ -29,7 +29,8 @@ class IngredientRecipe(models.Model):
 class Recipe(models.Model):
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
-                               default=None)
+                               default=None,
+                               related_name='recipe')
     image = models.ImageField(upload_to='recipes/images/',
                               default=None)
     name = models.CharField(max_length=200,

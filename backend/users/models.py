@@ -37,5 +37,4 @@ class User(AbstractUser):
         verbose_name='Роль',
         max_length=50,
         choices=ROLES,
-        default=USER
-    )
+        default=USER)

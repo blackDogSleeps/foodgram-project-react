@@ -11,7 +11,6 @@ from bookmarks.models import BookMark, ShoppingCart
 from recipes.models import Ingredient, Recipe, Tag
 from subscription.models import Follow
 
-from .exceptions import SameSubscribe
 from .filters import RecipeFilter
 from .make_pdf import make_pdf
 from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnly
@@ -54,14 +53,9 @@ class ShoppingCartViewSet(CreateModelMixin,
             'view': self,
             'favorites': BookMark.objects.filter(
                 user_id=self.request.user).values_list(
-                    'recipe_id', flat=True)}
-
-    def perform_create(self, serializer):
-        a_user = self.request.user
-        recipe_obj = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
-        if a_user.shopping.filter(recipe=recipe_obj).exists():
-            raise SameSubscribe('Этот рецепт уже в корзине')
-        serializer.save(user=a_user, recipe=recipe_obj)
+                    'recipe_id', flat=True),
+            'shopping_cart': self.request.user.shopping.values_list(
+                'recipe_id', flat=True)}
 
     def destroy(self, request, *args, **kwargs):
         subscription = get_object_or_404(
